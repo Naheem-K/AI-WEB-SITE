@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Song Finder - Discover Your Perfect Playlist</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg width='32' height='32' viewBox='0 0 32 32' xmlns='http://www.w3.org/2000/svg'><defs><linearGradient id='grad' x1='0%25' y1='0%25' x2='100%25' y2='100%25'><stop offset='0%25' style='stop-color:%23667eea;stop-opacity:1' /><stop offset='100%25' style='stop-color:%23764ba2;stop-opacity:1' /></linearGradient></defs><rect width='32' height='32' rx='6' fill='url(%23grad)'/><path d='M16 6v14.73c-.79-.45-1.69-.73-2.67-.73-2.95 0-5.33 2.38-5.33 5.33s2.38 5.34 5.33 5.34 5.34-2.39 5.34-5.34V12h5.33V6H16z' fill='white'/></svg>">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 24px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 800px;
+            width: 100%;
+            padding: 40px;
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .logo {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .logo svg {
+            width: 50px;
+            height: 50px;
+            fill: white;
+        }
+
+        h1 {
+            color: #2d3748;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            color: #718096;
+            font-size: 1.1rem;
+        }
+
+        .search-container {
+            margin-bottom: 30px;
+        }
+
+        .input-wrapper {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #a0aec0;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 18px 20px 18px 55px;
+            font-size: 1.1rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            outline: none;
+        }
+
+        input[type="text"]:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 12px;
+        }
+
+        button {
+            flex: 1;
+            padding: 16px 32px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background: #f7fafc;
+            color: #4a5568;
+            border: 2px solid #e2e8f0;
+        }
+
+        .btn-secondary:hover {
+            background: #edf2f7;
+            border-color: #cbd5e0;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .spinner {
+            border: 4px solid #f3f4f6;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .result {
+            display: none;
+            background: #f7fafc;
+            border-radius: 16px;
+            padding: 30px;
+            margin-top: 30px;
+        }
+
+        .result h3 {
+            color: #2d3748;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .song-list {
+            list-style: none;
+        }
+
+        .song-item {
+            background: white;
+            padding: 18px;
+            margin-bottom: 12px;
+            border-radius: 12px;
+            border-left: 4px solid #667eea;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+            animation: slideIn 0.5s ease-out;
+            animation-fill-mode: both;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .song-item:nth-child(1) { animation-delay: 0.1s; }
+        .song-item:nth-child(2) { animation-delay: 0.2s; }
+        .song-item:nth-child(3) { animation-delay: 0.3s; }
+        .song-item:nth-child(4) { animation-delay: 0.4s; }
+        .song-item:nth-child(5) { animation-delay: 0.5s; }
+
+        .song-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .song-number {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 30px;
+            font-weight: bold;
+            margin-right: 12px;
+            font-size: 0.9rem;
+        }
+
+        .song-details {
+            display: inline-block;
+            vertical-align: top;
+            width: calc(100% - 50px);
+        }
+
+        .song-name {
+            font-weight: 600;
+            color: #2d3748;
+            font-size: 1.1rem;
+            margin-bottom: 4px;
+        }
+
+        .artist-name {
+            color: #718096;
+            font-size: 0.95rem;
+        }
+
+        .error {
+            display: none;
+            background: #fff5f5;
+            color: #c53030;
+            padding: 20px;
+            border-radius: 12px;
+            border-left: 4px solid #fc8181;
+            margin-top: 20px;
+        }
+
+        .examples {
+            margin-top: 30px;
+            padding-top: 30px;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .examples h4 {
+            color: #4a5568;
+            margin-bottom: 15px;
+            font-size: 1rem;
+        }
+
+        .example-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .example-tag {
+            background: #edf2f7;
+            color: #4a5568;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .example-tag:hover {
+            background: #667eea;
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 24px;
+            }
+
+            h1 {
+                font-size: 1.8rem;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+
+            .song-details {
+                width: calc(100% - 45px);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
+                </svg>
+            </div>
+            <h1>AI Song Finder</h1>
+            <p class="subtitle">Discover your perfect playlist powered by AI</p>
+        </div>
+
+        <div class="search-container">
+            <div class="input-wrapper">
+                <svg class="input-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <path d="m21 21-4.35-4.35"></path>
+                </svg>
+                <input 
+                    type="text" 
+                    id="question" 
+                    placeholder="e.g., upbeat workout songs, chill lo-fi, 90s rock classics..."
+                    onkeypress="if(event.key === 'Enter') recommend()"
+                >
+            </div>
+            <div class="button-group">
+                <button class="btn-primary" onclick="recommend()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                    </svg>
+                    Find Songs
+                </button>
+                <button class="btn-secondary" onclick="clearResults()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="1 4 1 10 7 10"></polyline>
+                        <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+                    </svg>
+                    Clear
+                </button>
+            </div>
+        </div>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p style="color: #718096;">Finding the perfect songs for you...</p>
+        </div>
+
+        <div class="error" id="error"></div>
+
+        <div class="result" id="result">
+            <h3>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M9 18V5l12-2v13"></path>
+                    <circle cx="6" cy="18" r="3"></circle>
+                    <circle cx="18" cy="16" r="3"></circle>
+                </svg>
+                Your Recommendations
+            </h3>
+            <ul class="song-list" id="songList"></ul>
+        </div>
+
+        <div class="examples">
+            <h4>💡 Try these examples:</h4>
+            <div class="example-tags">
+                <span class="example-tag" onclick="setExample('upbeat morning workout songs')">🏃 Workout Energy</span>
+                <span class="example-tag" onclick="setExample('chill lo-fi beats for studying')">📚 Study Focus</span>
+                <span class="example-tag" onclick="setExample('romantic songs for date night')">❤️ Romantic Vibes</span>
+                <span class="example-tag" onclick="setExample('90s alternative rock classics')">🎸 90s Rock</span>
+                <span class="example-tag" onclick="setExample('relaxing acoustic guitar music')">🎵 Acoustic Chill</span>
+                <span class="example-tag" onclick="setExample('energetic EDM for party')">🎉 Party Mode</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function recommend() {
+            const question = document.getElementById("question").value.trim();
+            const loading = document.getElementById("loading");
+            const result = document.getElementById("result");
+            const error = document.getElementById("error");
+            const songList = document.getElementById("songList");
+
+            // Clear previous results
+            error.style.display = "none";
+            result.style.display = "none";
+            songList.innerHTML = "";
+
+            // Validate input
+            if (!question) {
+                showError("Please enter a mood, genre, or description!");
+                return;
+            }
+
+            // Show loading
+            loading.style.display = "block";
+
+            try {
+                const response = await fetch("http://127.0.0.1:8000/api/ai/recommend", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ question: question })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.detail || "Failed to get recommendations");
+                }
+
+                // Parse and display songs
+                displaySongs(data.recommendation);
+
+            } catch (err) {
+                showError("Oops! Something went wrong. Please try again. " + err.message);
+            } finally {
+                loading.style.display = "none";
+            }
+        }
+
+        function displaySongs(recommendation) {
+            const songList = document.getElementById("songList");
+            const result = document.getElementById("result");
+            
+            // Split by lines and filter out empty lines
+            const lines = recommendation.split('\n').filter(line => line.trim());
+            
+            lines.forEach((line, index) => {
+                line = line.trim();
+                
+                // Look for numbered items
+                if (line.match(/^\d+[\.)]/)) {
+                    // Remove number and clean up
+                    let songInfo = line.replace(/^\d+[\.)]/, '').trim();
+                    
+                    // Split by – or -
+                    let parts = songInfo.split(/[–-]/);
+                    
+                    if (parts.length >= 2) {
+                        const songName = parts[0].trim();
+                        const artistName = parts[1].trim();
+                        
+                        const li = document.createElement('li');
+                        li.className = 'song-item';
+                        li.innerHTML = `
+                            <span class="song-number">${index + 1}</span>
+                            <div class="song-details">
+                                <div class="song-name">${songName}</div>
+                                <div class="artist-name">${artistName}</div>
+                            </div>
+                        `;
+                        songList.appendChild(li);
+                    }
+                }
+            });
+
+            // Show result if we found songs
+            if (songList.children.length > 0) {
+                result.style.display = "block";
+            } else {
+                showError("Couldn't parse the recommendations. Please try again!");
+            }
+        }
+
+        function showError(message) {
+            const error = document.getElementById("error");
+            error.textContent = message;
+            error.style.display = "block";
+        }
+
+        function clearResults() {
+            document.getElementById("question").value = "";
+            document.getElementById("result").style.display = "none";
+            document.getElementById("error").style.display = "none";
+            document.getElementById("songList").innerHTML = "";
+        }
+
+        function setExample(text) {
+            document.getElementById("question").value = text;
+            recommend();
+        }
+    </script>
+</body>
+</html>
